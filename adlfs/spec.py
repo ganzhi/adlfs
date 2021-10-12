@@ -406,7 +406,7 @@ class AzureBlobFileSystem(AsyncFileSystem):
         client_id: str = None,
         client_secret: str = None,
         tenant_id: str = None,
-        anon: bool = True,
+        anon: bool = False,
         location_mode: str = "primary",
         loop=None,
         asynchronous: bool = False,
@@ -455,6 +455,17 @@ class AzureBlobFileSystem(AsyncFileSystem):
         self.do_connect()
         weakref.finalize(self, sync, self.loop, close_service_client, self)
 
+    @staticmethod
+    def _get_kwargs_from_urls(paths):
+        """ Get the store_name from the urlpath and pass to storage_options """
+        ops = infer_storage_options(paths)
+        out = {}
+        if "username" in ops:
+            if ops.get("username", None):
+                if ops.get("host", None):
+                    out["account_name"] = ops["host"].split('.')[0]
+        return out
+        
     @classmethod
     def _strip_protocol(cls, path: str):
         """
